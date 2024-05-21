@@ -1,0 +1,30 @@
+services:
+  database:
+    image: 'bitnami/mysql:latest'
+    restart: always
+    container_name: 'fiap-db'
+    ports:
+      - 3320:3306
+    environment:
+      - MYSQL_USER=docker
+      - MYSQL_PASSWORD=docker
+      - MYSQL_DATABASE=fiap-local
+      - MYSQL_ROOT_PASSWORD=docker
+      - ALLOW_EMPTY_PASSWORD=yes
+  app:
+    build: .
+    container_name: fiap-api
+    ports:
+      - 3340:3000
+    volumes:
+      - .:/usr/fiap-api
+    links:
+      - database
+    depends_on:
+      - database
+    command: sh -c "/wait; npm i; npx prisma migrate dev; npx prisma db seed; npm run dev"
+    environment:
+      - WAIT_HOSTS=database:3306
+      - WAIT_TIMEOUT=300
+      - WAIT_SLEEP_INTERVAL=5
+      - WAIT_HOST_CONNECT_TIMEOUT=300
